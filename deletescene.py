@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #     
 #     'SavantSceneDelete'
-#     Copyright (C) '2017'  J14 Systems
+#     Copyright (C) '2017' J14 Systems
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -17,8 +17,33 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import sqlite3
+import os.path
+from subprocess import call
 
-dashbaord = sqlite3.connect('dashboard.sqlite')
+if os.path.isfile('/Users/RPM/Library/Application Support/RacePointMedia/statusfiles/dis/dashboard.sqlite'):
+    hosttype = "pro"
+    database = "/Users/RPM/Library/Application Support/RacePointMedia/statusfiles/dis/dashboard.sqlite"
+elif os.path.isfile('/data/RPM/GNUstep/Library/ApplicationSupport/RacePointMedia/statusfiles/dis/dashboard.sqlite'):
+    hosttype = "smart"
+    database = "/data/RPM/GNUstep/Library/ApplicationSupport/RacePointMedia/statusfiles/dis/dashboard.sqlite"
+else:
+    hosttype = "none"
+    while True:
+        databasepath = raw_input("Type the path to your dashboard.sqlite database: ")
+        if os.path.isfile(databasepath):
+            database = databasepath
+            break
+
+print "Running on a host type of: %s" % hosttype
+
+if hosttype != "none":
+    while True:
+        confirm1 = raw_input("Savant needs to be disabled to continue, type 'yes' to confirm: ")
+        if confirm1.lower() == 'yes':
+            call('/usr/local/bin/rpm/stopSavantSystem')
+            break
+
+dashbaord = sqlite3.connect(database)
 query1 = dashbaord.execute("SELECT * FROM Scenes")
 scenenum = 1
 selection = 0
@@ -55,3 +80,12 @@ if confirm.lower() == 'yes':
     dashbaord.execute("DELETE from SceneDefinitions WHERE sceneIdentifier = '%s'" % scenes[selection][0])
     dashbaord.commit()
     print "Scene \"%s\" deleted" % scenes[selection][1]
+
+if hosttype != "none":
+    while True:
+        confirm1 = raw_input("Savant can now be restarted, type 'yes' to confirm: ")
+        if confirm1.lower() == 'yes':
+            call('/usr/local/bin/rpm/startSavantSystem')
+            break
+        elif confirm1.lower() == "no":
+            print "Not restarting Savant system. This will have to be done manually"
