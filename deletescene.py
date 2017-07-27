@@ -54,7 +54,20 @@ try:
         print "Found Scenes:"
         print "----------------------------------------"
         for row in query1:
-            print "%s: %s [Active In: %s]" % (scenenum, row[1], row[3])
+            extrainfo = ""
+            users = []
+            if row[6] == 1:
+                extrainfo = extrainfo + " >> Scheduled"
+                if row[5] == 1:
+                    extrainfo = extrainfo + " and Schedule Enabled"
+
+            queryuser = dashbaord.execute("SELECT user FROM SceneUserMap WHERE sceneIdentifier = '%s'" % row[0])
+            for user in queryuser:
+                user = str(user[0])
+                if user != '':
+                    users.append(user)
+            #print users
+            print "%s:\t%s\tUser(s): %s\tZone(s): %s\t%s" % (scenenum, row[1], ', '.join(users), row[3], extrainfo)
             scenes[scenenum] = row
             scenenum += 1
         print "----------------------------------------"
